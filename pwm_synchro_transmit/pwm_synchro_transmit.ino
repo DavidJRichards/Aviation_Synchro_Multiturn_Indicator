@@ -161,14 +161,12 @@ ISR(TIMER2_OVF_vect) {
   byte idx;                       // read value fron ROM sine table and send to PWM DAC
   byte amp;
 
-  sigma=sigma+delta;              // soft DDS, phase accu with 32 bits
-  phase0=sigma >> 24;             // use upper 8 bits for phase accu as frequency information
+  sigma = sigma + delta;          // soft DDS, phase accu with 32 bits
+  phase0 = sigma >> 24;           // use upper 8 bits for phase accu as frequency information
 
-  phase1 = phase0 + 42 ;          // +120 degrees
-  phase2 = phase0 + 85 ;          // +240 degrees
+  phase1 = phase0;          
+  phase2 = phase0;        
 
-// djrm, note: expected values for 120 degree phase shift not found suitabe - to investigate cause
- 
   // generate 400 Hz reference square wave ( for syncing rotor power supply )
   if(phase2 >= 128)
   cbi(PORTD,testPin);   
@@ -178,9 +176,9 @@ ISR(TIMER2_OVF_vect) {
 //-----------------------------------------------------------------------------------------
 // generate two signals 120 degrees apart
 // to feed into S1 and S2, S3 being common ground.
- #if 0
-  idx = 128 | phaseVal;                               // rotation angle (0 o 255)
-  phaseA = 2 * pgm_read_byte_near(sine256 + idx);       // sin rotation angle is scale factor
+ #if 1
+  idx = 128 | phaseVal;                             // rotation angle (0 o 255)
+  phaseA = 2 * pgm_read_byte_near(sine256 + idx);   // sin rotation angle is scale factor
 
   if(phaseVal < 64 || phaseVal > 192)               // invert when needed
     phase0 = phase0 + 128;                          // invert phase of drive signal
@@ -191,8 +189,8 @@ ISR(TIMER2_OVF_vect) {
 
 //------------------------------------------------------------------------------------------
  
-  idx = 128 | phaseVal + 85;                          // shifted rotation angle (120 deg)
-  phaseB = 2 * pgm_read_byte_near(sine256 + idx);       //
+  idx = 128 | phaseVal + 85;                        // shifted rotation angle (120 deg)
+  phaseB = 2 * pgm_read_byte_near(sine256 + idx);
 
   if(phaseVal < 112 || phaseVal > 232)              
     phase1 = phase1 + 128;                          // invert phase of drive signal
@@ -203,8 +201,8 @@ ISR(TIMER2_OVF_vect) {
 
 //------------------------------------------------------------------------------------------
  
-  idx = 128 | phaseVal - 85;                          // shifted rotation angle (240 deg)
-  phaseC = 2 * pgm_read_byte_near(sine256 + idx);       //
+  idx = 128 | phaseVal - 85;                        // shifted rotation angle (240 deg)
+  phaseC = 2 * pgm_read_byte_near(sine256 + idx);  
 
   if(phaseVal < 28 || phaseVal > 148)              
     phase2 = phase2 + 128;                          // invert phase of drive signal
