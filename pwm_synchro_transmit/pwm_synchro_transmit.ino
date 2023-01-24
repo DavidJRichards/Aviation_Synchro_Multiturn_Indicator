@@ -5,6 +5,10 @@
 // djrm, modified into synchro transmitter
 // wip: 22 Jan 2023
 
+#include <TM1637.h>
+// define a module on data pin 5 (D1), clock pin 4 (D2)
+TM1637 module(A2, A1);  // DIO=5, CLK=4
+
 // table of 256 sine values / one sine period / stored in flash memory
 PROGMEM const unsigned char sine256[]  = {
   
@@ -51,6 +55,11 @@ byte phaseA, phaseB, phaseC;
 
 void setup()
 {
+  module.setupDisplay(true, 3);
+  module.setDisplayToString("DJR");
+  delay(400);
+  module.clearDisplay();
+
   Serial.begin(9600);        // connect to the serial port
   Serial.println("DDS Test");
 
@@ -73,14 +82,19 @@ void setup()
   changeFreq(400);      // operate at fixed frequency of 400Hz
 }
 void loop(){
+  char text[4];
 
 // update rotor angle from pot connected to analogue 0 input  
   if( (potVal=analogRead(Freq_IN)) != newVal)
   {
     newVal=potVal;
-    if(potVal>690)potVal=690;
-    phaseVal=map(potVal,0,690,0,255);
-  
+    if(potVal>1020)potVal=1020;
+    phaseVal=map(potVal,0,1020,0,255);
+
+  sprintf(text, "%3u", map(potVal,0,1020,0,360));
+  module.setDisplayToString(text);
+  delay(100);
+
     if (TOGGLE)
     {
       Serial.print(potVal);
@@ -167,8 +181,8 @@ ISR(TIMER2_OVF_vect) {
   phase1 = phase0;          
   phase2 = phase0;        
 
-  // generate 400 Hz reference square wave ( for syncing rotor power supply )
-  if(phase2 >= 128)
+  // generate 400 Hz reference +ve going pulse for syncing rotor power supply 
+  if(phase2 < 10)       // tradeoff between good sync and waveform distortion here
   cbi(PORTD,testPin);   
   else
   sbi(PORTD,testPin);          
