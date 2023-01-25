@@ -6,8 +6,8 @@
 // wip: 22 Jan 2023
 
 #include <TM1637.h>
-// define a module on data pin 5 (D1), clock pin 4 (D2)
-TM1637 module(A2, A1);  // DIO=5, CLK=4
+// define a module on data pin A2, clock pin A1
+TM1637 module(A2, A1);  
 
 // table of 256 sine values / one sine period / stored in flash memory
 PROGMEM const unsigned char sine256[]  = {
@@ -30,10 +30,10 @@ PROGMEM const unsigned char sine256[]  = {
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 
-int TOGGLE = 0;
-
+int TOGGLE = 1;
 int testPin = 7;
 //int enablePin = 6 ;
+int syncIp = 3; // interrupt input to synchronise frequency generation
 int Freq_IN = A0;
 int potVal = 200;
 int newVal;
@@ -73,6 +73,7 @@ void setup()
   Setup_timer2();
   Setup_timer1();
 //  digitalWrite(enablePin, HIGH);
+  attachInterrupt(digitalPinToInterrupt(syncIp), zerocrossing, RISING); 
 
 // the waveform index is the highest 8 bits of sigma
 // choose refclk as freq to increment the lsb of the 8 highest bits
@@ -81,6 +82,7 @@ void setup()
   delta = (1LL<<24)*freq/refclk ;  
   changeFreq(400);      // operate at fixed frequency of 400Hz
 }
+
 void loop(){
   char text[4];
 
@@ -110,7 +112,12 @@ void loop(){
     }
   }
               
- }
+}
+
+void zerocrossing()          
+{                   
+   sigma = 32L << 24;              // sync generator to zero crossing
+}
 
 void changeFreq(float _freq){
   cbi (TIMSK2,TOIE2);              // disable timer2 overflow detect
