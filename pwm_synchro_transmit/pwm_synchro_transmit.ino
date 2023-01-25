@@ -73,7 +73,7 @@ void setup()
   Setup_timer2();
   Setup_timer1();
 //  digitalWrite(enablePin, HIGH);
-  attachInterrupt(digitalPinToInterrupt(syncIp), zerocrossing, RISING); 
+  attachInterrupt(digitalPinToInterrupt(syncIp), zerocrossing, FALLING); 
 
 // the waveform index is the highest 8 bits of sigma
 // choose refclk as freq to increment the lsb of the 8 highest bits
